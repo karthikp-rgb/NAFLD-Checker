@@ -21,40 +21,67 @@ MODEL_PATH, CNN_PATH = "model.pkl", "ultrasound_cnn.pt"
 
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 #MainMenu, header, footer {visibility: hidden;}
-.block-container {padding-top: 1.2rem; padding-bottom: 2rem; max-width: 1150px;}
-html, body, [class*="css"] {font-family: 'Inter','Segoe UI',system-ui,sans-serif;}
-.hero {background: linear-gradient(120deg,#0f766e 0%,#155e75 55%,#1e3a8a 100%);
-       border-radius: 18px; padding: 26px 32px; color:#fff;
-       box-shadow: 0 10px 30px rgba(15,118,110,.25); margin-bottom: 16px;}
-.hero h1 {font-size: 1.75rem; font-weight: 800; margin: 0 0 4px 0; color:#fff;}
-.hero p {margin:0; opacity:.95; font-size:1rem;}
-.pill {display:inline-block; background: rgba(255,255,255,.20); padding: 4px 12px;
-       border-radius:999px; font-size:.8rem; margin-top:10px; margin-right:6px;}
-.sec {font-weight:700; font-size:1.05rem; color:#f1f5f9; margin:0;}
-.sub {color:#94a3b8; font-size:.85rem; margin:0 0 6px 0;}
-.stButton>button {background: linear-gradient(120deg,#0f766e,#1e3a8a); color:#fff;
-       border:0; border-radius:12px; padding:.7rem 1rem; font-weight:800; font-size:1.02rem;
-       box-shadow:0 6px 16px rgba(15,118,110,.30);}
-.stButton>button:hover {filter:brightness(1.08);}
-.scorecard{border-radius:14px; padding:13px 15px; background:#f8fafc;}
-.scorecard .v{font-size:1.5rem; font-weight:800; color:#0f172a; line-height:1;}
-.scorecard .l{font-size:.74rem; color:#475569; margin-top:4px; line-height:1.25;}
-.reco{border-radius:16px; padding:18px 20px; color:#fff;}
-.reco h3{margin:0 0 5px 0; color:#fff; font-size:1.25rem; font-weight:800;}
-.reco p{margin:0; color:#fff; font-size:.98rem; opacity:.97;}
-.tip{display:inline-block; background:#1e293b; color:#cbd5e1; border:1px solid #334155;
-     padding:7px 12px; border-radius:999px; font-size:.82rem; margin:4px 6px 0 0;}
+.stApp {background:
+  radial-gradient(1100px 560px at 8% -8%, rgba(20,184,166,.16), transparent 60%),
+  radial-gradient(1000px 520px at 100% 0%, rgba(99,102,241,.16), transparent 55%),
+  radial-gradient(900px 500px at 50% 120%, rgba(217,70,239,.10), transparent 55%),
+  #0a0e1a;}
+.block-container {padding-top: 1.1rem; padding-bottom: 2rem; max-width: 1120px;}
+html, body, [class*="css"], .stMarkdown, p, label, div {font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
+@keyframes heroShift {0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}}
+@keyframes fadeUp {from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+.hero {position:relative; overflow:hidden; border-radius:22px; padding:30px 34px; margin-bottom:18px;
+       color:#fff; animation:fadeUp .5s ease;
+       background:linear-gradient(120deg,#0f766e,#155e75,#4338ca,#7c3aed,#0f766e);
+       background-size:320% 320%; animation:heroShift 14s ease infinite, fadeUp .5s ease;
+       box-shadow:0 20px 50px rgba(67,56,249,.28), inset 0 1px 0 rgba(255,255,255,.15);}
+.hero h1 {font-family:'Space Grotesk',sans-serif; font-size:2.05rem; font-weight:700;
+          margin:0 0 6px 0; color:#fff; letter-spacing:-.5px;}
+.hero p {margin:0; opacity:.95; font-size:1.05rem; max-width:640px;}
+.badge {display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.16);
+        padding:5px 13px; border-radius:999px; font-size:.78rem; font-weight:600; margin-bottom:12px;}
+.dot {width:8px; height:8px; border-radius:50%; background:#4ade80; box-shadow:0 0 10px #4ade80;}
+.pill {display:inline-block; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.14);
+       padding:6px 13px; border-radius:999px; font-size:.82rem; font-weight:500; margin-top:12px; margin-right:7px;}
+div[data-testid="stVerticalBlockBorderWrapper"]{
+   border-radius:20px !important; border:1px solid rgba(255,255,255,.09) !important;
+   background:rgba(255,255,255,.035) !important; backdrop-filter:blur(10px);
+   box-shadow:0 12px 40px rgba(0,0,0,.35); animation:fadeUp .5s ease; transition:transform .18s, border-color .18s;}
+div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px); border-color:rgba(94,234,212,.35) !important;}
+.sec {font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.15rem; color:#f1f5f9; margin:0;}
+.sub {color:#94a3b8; font-size:.86rem; margin:2px 0 8px 0;}
+.stButton>button {background:linear-gradient(120deg,#14b8a6,#4338ca); color:#fff;
+   border:0; border-radius:16px; padding:.8rem 1rem; font-weight:800; font-size:1.05rem;
+   letter-spacing:.2px; box-shadow:0 10px 28px rgba(67,56,249,.38); transition:transform .15s, filter .15s;}
+.stButton>button:hover {transform:translateY(-2px); filter:brightness(1.12);}
+.scorecard{background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09);
+   border-radius:16px; padding:15px 16px;}
+.scorecard .v{font-family:'Space Grotesk',sans-serif; font-size:1.85rem; font-weight:700; line-height:1;
+   background:linear-gradient(120deg,#5eead4,#818cf8); -webkit-background-clip:text;
+   background-clip:text; -webkit-text-fill-color:transparent;}
+.scorecard .l{font-size:.73rem; color:#94a3b8; margin-top:6px; line-height:1.3;}
+.reco{border-radius:18px; padding:20px 22px; color:#fff;}
+.reco h3{font-family:'Space Grotesk',sans-serif; margin:0 0 6px 0; color:#fff; font-size:1.3rem; font-weight:700;}
+.reco p{margin:0; color:#fff; font-size:1rem; opacity:.98; line-height:1.5;}
+.tip{display:inline-block; background:rgba(255,255,255,.06); color:#cbd5e1;
+   border:1px solid rgba(255,255,255,.12); padding:8px 13px; border-radius:999px;
+   font-size:.83rem; margin:5px 7px 0 0; transition:background .15s;}
+.tip:hover{background:rgba(255,255,255,.12);}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="hero">
-  <h1>🩺 Fatty Liver (NAFLD) Risk Checker</h1>
-  <p>A quick, friendly check for early fatty liver using a few simple health numbers.</p>
-  <span class="pill">🇮🇳 ~38% of Indian adults affected</span>
-  <span class="pill">No needles · no cost</span>
-  <span class="pill">Takes 30 seconds</span>
+  <div class="badge"><span class="dot"></span> AI-powered early check</div>
+  <h1>Fatty Liver Risk Checker</h1>
+  <p>Find out your chance of early fatty liver (NAFLD) in 30 seconds — using a few simple numbers from a normal health check-up.</p>
+  <div>
+    <span class="pill">🇮🇳 ~38% of Indian adults affected</span>
+    <span class="pill">No needles · no cost</span>
+    <span class="pill">Plain-language result</span>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -112,16 +139,28 @@ def us_heuristic_prob(img):
     return float(min(max((0.75 * mean_b + 0.25 * (1 - min(texture * 4, 1)) - 0.35) / 0.4, 0), 1))
 
 
-def gauge(pct, color, word):
-    r, circ = 80, 2 * math.pi * 80
+def gauge(pct, c1, c2, cmain, word):
+    circ = 2 * math.pi * 80
     return f"""
-    <div style="text-align:center">
-      <svg width="220" height="220" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="{r}" fill="none" stroke="#334155" stroke-width="18"/>
-        <circle cx="100" cy="100" r="{r}" fill="none" stroke="{color}" stroke-width="18"
-          stroke-linecap="round" stroke-dasharray="{circ*pct} {circ}" transform="rotate(-90 100 100)"/>
-        <text x="100" y="94" text-anchor="middle" font-size="46" font-weight="800" fill="{color}">{pct*100:.0f}%</text>
-        <text x="100" y="124" text-anchor="middle" font-size="19" font-weight="700" fill="{color}">{word}</text>
+    <div style="text-align:center; padding:6px 0">
+      <svg width="240" height="240" viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="arc" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="{c1}"/><stop offset="100%" stop-color="{c2}"/>
+          </linearGradient>
+          <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="16"/>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="url(#arc)" stroke-width="16"
+          stroke-linecap="round" stroke-dasharray="{circ*pct} {circ}"
+          transform="rotate(-90 100 100)" filter="url(#glow)"/>
+        <text x="100" y="94" text-anchor="middle" font-size="50" font-weight="700"
+          fill="{cmain}" style="font-family:'Space Grotesk',sans-serif">{pct*100:.0f}%</text>
+        <text x="100" y="126" text-anchor="middle" font-size="19" font-weight="700"
+          fill="{cmain}" style="font-family:'Space Grotesk',sans-serif">{word}</text>
       </svg>
     </div>"""
 
@@ -189,25 +228,29 @@ if go:
     fib_mid = F and 1.3 <= F < 2.67
 
     if overall >= 0.6 or fib_high:
-        color, word, title, msg = "#dc2626", "High", "🔴 Please see a doctor soon", \
+        c1, c2, cmain, word = "#fb7185", "#dc2626", "#fb7185", "High"
+        title, msg = "🔴 Please see a doctor soon", \
             "There's a high chance of early fatty liver. Ask your doctor for a liver scan (ultrasound or FibroScan) and a check-up."
     elif overall >= 0.3 or fib_mid:
-        color, word, title, msg = "#f59e0b", "Moderate", "🟠 Worth getting checked", \
+        c1, c2, cmain, word = "#fbbf24", "#f59e0b", "#fbbf24", "Moderate"
+        title, msg = "🟠 Worth getting checked", \
             "There are some early signs. It's a good idea to get an ultrasound scan and speak to a doctor. Small lifestyle changes really help."
     else:
-        color, word, title, msg = "#16a34a", "Low", "🟢 Looking good", \
+        c1, c2, cmain, word = "#34d399", "#16a34a", "#34d399", "Low"
+        title, msg = "🟢 Looking good", \
             "Low chance of fatty liver right now. Keep eating well and staying active, and check again in about a year."
 
     st.write("")
     g, d = st.columns([1, 1.3])
     with g:
         with st.container(border=True):
-            st.markdown(gauge(min(max(overall, 0), 1), color, word), unsafe_allow_html=True)
+            st.markdown(gauge(min(max(overall, 0), 1), c1, c2, cmain, word), unsafe_allow_html=True)
     with d:
         with st.container(border=True):
-            st.markdown(f'<div class="reco" style="background:{color}"><h3>{title}</h3>'
-                        f'<p>{msg}</p></div>', unsafe_allow_html=True)
-            st.markdown('<div style="margin-top:12px">'
+            st.markdown(f'<div class="reco" style="background:linear-gradient(120deg,{c1},{c2});'
+                        f'box-shadow:0 14px 34px {c2}44"><h3>{title}</h3><p>{msg}</p></div>',
+                        unsafe_allow_html=True)
+            st.markdown('<div style="margin-top:14px">'
                         '<span class="tip">🥗 More veggies, less sugar</span>'
                         '<span class="tip">🚶 Move ~30 min a day</span>'
                         '<span class="tip">💧 Skip sugary drinks</span></div>', unsafe_allow_html=True)
