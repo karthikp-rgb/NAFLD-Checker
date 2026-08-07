@@ -69,6 +69,23 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
    border:1px solid rgba(255,255,255,.12); padding:8px 13px; border-radius:999px;
    font-size:.83rem; margin:5px 7px 0 0; transition:background .15s;}
 .tip:hover{background:rgba(255,255,255,.12);}
+.gaugewrap svg{width:100%; max-width:240px; height:auto;}
+@media (max-width: 640px){
+  .block-container{padding-left:.7rem; padding-right:.7rem; padding-top:.6rem;}
+  .hero{padding:22px 20px; border-radius:18px;}
+  .hero h1{font-size:1.55rem;}
+  .hero p{font-size:.95rem;}
+  .badge{font-size:.72rem;}
+  .pill{font-size:.75rem; padding:5px 11px; margin-top:8px;}
+  div[data-testid="stVerticalBlockBorderWrapper"]{border-radius:16px !important;}
+  .sec{font-size:1.05rem;}
+  .reco{padding:16px 18px;}
+  .reco h3{font-size:1.15rem;}
+  .reco p{font-size:.94rem;}
+  .scorecard .v{font-size:1.55rem;}
+  .stButton>button{font-size:1rem;}
+  .gaugewrap svg{max-width:200px;}
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -142,8 +159,8 @@ def us_heuristic_prob(img):
 def gauge(pct, c1, c2, cmain, word):
     circ = 2 * math.pi * 80
     return f"""
-    <div style="text-align:center; padding:6px 0">
-      <svg width="240" height="240" viewBox="0 0 200 200">
+    <div class="gaugewrap" style="text-align:center; padding:6px 0">
+      <svg viewBox="0 0 200 200">
         <defs>
           <linearGradient id="arc" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="{c1}"/><stop offset="100%" stop-color="{c2}"/>
