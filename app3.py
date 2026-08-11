@@ -2,8 +2,10 @@
 Fatty Liver (NAFLD) Risk Checker
 Karthik P | MBA Dissertation 2026
 
-Powered by a machine-learning model trained on the liver-disease dataset.
-Enter a few everyday health details -> plain-language risk + what to do next.
+A combined screening tool that FUSES two models:
+  1) a tabular model trained on health/lifestyle data (the 1700-record set)
+  2) an image model for a liver ultrasound (a CNN, or a built-in image analysis)
+The final risk blends both when an ultrasound is uploaded.
 
 A helper for you and your doctor - not a medical diagnosis.
 """
@@ -13,9 +15,10 @@ import numpy as np
 import pandas as pd
 import joblib
 import streamlit as st
+from PIL import Image, ImageStat, ImageFilter
 
 st.set_page_config(page_title="Fatty Liver Risk Checker", page_icon="🩺", layout="wide")
-MODEL_PATH = "model.pkl"
+MODEL_PATH, CNN_PATH = "model.pkl", "ultrasound_cnn.pt"
 
 st.markdown("""
 <style>
@@ -35,7 +38,7 @@ html, body, [class*="css"], .stMarkdown, p, label, div {font-family:'Plus Jakart
        background-size:320% 320%; animation:heroShift 14s ease infinite, fadeUp .5s ease;
        box-shadow:0 20px 50px rgba(67,56,249,.28), inset 0 1px 0 rgba(255,255,255,.15);}
 .hero h1 {font-family:'Space Grotesk',sans-serif; font-size:2.05rem; font-weight:700; margin:0 0 6px 0; color:#fff; letter-spacing:-.5px;}
-.hero p {margin:0; opacity:.95; font-size:1.05rem; max-width:640px;}
+.hero p {margin:0; opacity:.95; font-size:1.05rem; max-width:660px;}
 .badge {display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.16); padding:5px 13px; border-radius:999px; font-size:.78rem; font-weight:600; margin-bottom:12px;}
 .dot {width:8px; height:8px; border-radius:50%; background:#4ade80; box-shadow:0 0 10px #4ade80;}
 .pill {display:inline-block; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.14); padding:6px 13px; border-radius:999px; font-size:.82rem; font-weight:500; margin-top:12px; margin-right:7px;}
@@ -70,13 +73,13 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span> AI-powered early check</div>
+  <div class="badge"><span class="dot"></span> Two AI models, one result</div>
   <h1>Fatty Liver Risk Checker</h1>
-  <p>Answer a few everyday health questions and a trained AI model estimates your chance of fatty liver (NAFLD).</p>
+  <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
     <span class="pill">🇮🇳 ~38% of Indian adults affected</span>
-    <span class="pill">Mostly lifestyle questions</span>
-    <span class="pill">Takes under a minute</span>
+    <span class="pill">Health details + optional ultrasound</span>
+    <span class="pill">Combined AI result</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -85,6 +88,41 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     return joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
+
+
+@st.cache_resource
+def load_cnn():
+    if not os.path.exists(CNN_PATH):
+        return None
+    try:
+        import torch, torch.nn as nn
+        from torchvision import models
+        ckpt = torch.load(CNN_PATH, map_location="cpu")
+        net = models.mobilenet_v2()
+        net.classifier[1] = nn.Linear(net.last_channel, 2)
+        net.load_state_dict(ckpt["state_dict"]); net.eval()
+        return {"net": net, "classes": ckpt.get("classes", ["fatty", "normal"])}
+    except Exception:
+        return None
+
+
+def us_cnn_prob(img, cnn):
+    import torch
+    from torchvision import transforms
+    tf = transforms.Compose([transforms.Grayscale(3), transforms.Resize((224, 224)),
+                             transforms.ToTensor(),
+                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+    with torch.no_grad():
+        p = torch.softmax(cnn["net"](tf(img).unsqueeze(0)), 1)[0]
+    idx = cnn["classes"].index("fatty") if "fatty" in cnn["classes"] else 0
+    return float(p[idx])
+
+
+def us_heuristic_prob(img):
+    g = img.convert("L").resize((256, 256))
+    mean_b = ImageStat.Stat(g).mean[0] / 255.0
+    texture = ImageStat.Stat(g.filter(ImageFilter.FIND_EDGES)).mean[0] / 255.0
+    return float(min(max((0.75 * mean_b + 0.25 * (1 - min(texture * 4, 1)) - 0.35) / 0.4, 0), 1))
 
 
 def gauge(pct, c1, c2, cmain, word):
@@ -107,7 +145,7 @@ def gauge(pct, c1, c2, cmain, word):
     </div>"""
 
 
-model_bundle = load_model()
+model_bundle, cnn = load_model(), load_cnn()
 
 with st.container(border=True):
     st.markdown('<p class="sec">Your details</p>'
@@ -125,6 +163,14 @@ with st.container(border=True):
     hypertension = c.selectbox("High blood pressure?", ["No", "Yes"], help="Hypertension")
     lft = a.number_input("Liver function test score (optional)", 0.0, 150.0, 40.0, 1.0,
                          help="A value from a liver blood test if you have one; leave as-is if you don't.")
+
+    with st.expander("➕  Add a liver ultrasound image (optional — adds the image model)"):
+        up = st.file_uploader("Upload a B-mode liver ultrasound (PNG/JPG)", type=["png", "jpg", "jpeg"])
+        us_img = Image.open(up) if up else None
+        if us_img:
+            st.image(us_img, width=260)
+        st.caption(("Deep-learning image model active." if cnn else "Built-in image analysis active.")
+                   + " When added, the image result is blended with your health-details result.")
 
 go = st.button("🔍  Check my liver risk", use_container_width=True)
 
@@ -147,12 +193,24 @@ if go:
     }
     feats = model_bundle["features"]
     row = pd.DataFrame([[values.get(f, 0) for f in feats]], columns=feats)
-    prob = float(model_bundle["model"].predict_proba(row)[0, 1])
+    tab_prob = float(model_bundle["model"].predict_proba(row)[0, 1])
+
+    # image model (optional) -> blend
+    img_prob = None
+    if us_img is not None:
+        img_prob = us_cnn_prob(us_img, cnn) if cnn else us_heuristic_prob(us_img)
+
+    if img_prob is not None:
+        prob = 0.6 * tab_prob + 0.4 * img_prob          # late fusion of the two models
+        parts = [("Health-details model", tab_prob, 60), ("Ultrasound image model", img_prob, 40)]
+    else:
+        prob = tab_prob
+        parts = [("Health-details model", tab_prob, 100)]
 
     if prob >= 0.6:
         c1, c2, cmain, word = "#fb7185", "#dc2626", "#fb7185", "High"
         title, msg = "🔴 Please see a doctor soon", \
-            "Your answers suggest a high chance of fatty liver. Please book a check-up and ask about a liver scan (ultrasound / FibroScan)."
+            "The combined result suggests a high chance of fatty liver. Please book a check-up and ask about a liver scan (ultrasound / FibroScan)."
     elif prob >= 0.3:
         c1, c2, cmain, word = "#fbbf24", "#f59e0b", "#fbbf24", "Moderate"
         title, msg = "🟠 Worth getting checked", \
@@ -183,9 +241,10 @@ if go:
             s3.markdown(f'<div class="scorecard"><div class="v">{activity:.0f}h</div>'
                         f'<div class="l">Activity / week<br>(more is better)</div></div>', unsafe_allow_html=True)
 
-    with st.expander("What does this mean?"):
-        st.write("A machine-learning model looked at your answers and estimated your chance of **fatty liver** — "
-                 "a build-up of fat in the liver that usually has no symptoms early on.")
+    with st.expander("How was this worked out?"):
+        st.write("Your final risk combines the models below (this is called an *ensemble* / late fusion):")
+        for name, p, w in parts:
+            st.write(f"- **{name}**: {p*100:.0f}%  (weight {w}%)")
         drivers = []
         if bmi >= 25: drivers.append(f"BMI {bmi:.0f}")
         if diabetes == "Yes": drivers.append("diabetes")
@@ -200,4 +259,4 @@ if go:
 
     st.caption("💙 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
 
-st.caption("MBA Dissertation 2026 · Karthik P · powered by a trained ML model")
+st.caption("MBA Dissertation 2026 · Karthik P")
