@@ -73,11 +73,10 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span> Two AI models, one result</div>
+  <div class="badge"><span class="dot"></span> </div>
   <h1>Fatty Liver Risk Checker</h1>
   <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
-    <span class="pill">🇮🇳 ~38% of Indian adults affected</span>
     <span class="pill">Health details + optional ultrasound</span>
     <span class="pill">Combined AI result</span>
   </div>
@@ -242,7 +241,7 @@ if go:
                         f'<div class="l">Activity / week<br>(more is better)</div></div>', unsafe_allow_html=True)
 
     with st.expander("How was this worked out?"):
-        st.write("Your final risk combines the models below (this is called an *ensemble* / late fusion):")
+        st.write("Your final risk combines the models")
         for name, p, w in parts:
             st.write(f"- **{name}**: {p*100:.0f}%  (weight {w}%)")
         drivers = []
