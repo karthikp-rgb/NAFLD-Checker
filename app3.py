@@ -124,6 +124,15 @@ def us_heuristic_prob(img):
     return float(min(max((0.75 * mean_b + 0.25 * (1 - min(texture * 4, 1)) - 0.35) / 0.4, 0), 1))
 
 
+def image_finding(p):
+    # plain-language, honest verdict from the image model's score (not a detailed diagnosis)
+    if 0.4 < p < 0.6:
+        return "the ultrasound is borderline — hard to tell from the picture alone"
+    verdict = "the ultrasound looks like a fatty liver" if p >= 0.6 else "the ultrasound looks fairly normal"
+    conf = "fairly confident" if abs(p - 0.5) >= 0.3 else "not very confident"
+    return f"{verdict} ({conf})"
+
+
 def gauge(pct, c1, c2, cmain, word):
     circ = 2 * math.pi * 80
     return f"""
@@ -160,7 +169,6 @@ with st.container(border=True):
     diabetes = a.selectbox("Do you have diabetes?", ["No", "Yes"], help="Type-2 diabetes")
     hypertension = b.selectbox("High blood pressure?", ["No", "Yes"], help="Hypertension")
 
-    # Alcohol — ask first, then how many only if they say yes
     d1, d2 = st.columns(2)
     drank = d1.selectbox("Did you drink alcohol this week?", ["No", "Yes"])
     alcohol = 0.0
@@ -168,7 +176,6 @@ with st.container(border=True):
         alcohol = d2.number_input("How many drinks this week?", 0.0, 40.0, 3.0, 0.5,
                                   help="Roughly how many alcoholic drinks this week")
 
-    # Liver function test — optional, only ask for the number if they have it
     e1, e2 = st.columns(2)
     has_lft = e1.selectbox("Do you have a liver function test score?", ["No", "Yes"],
                            help="A number from a liver blood test — leave as 'No' if you don't have one")
@@ -249,6 +256,8 @@ if go:
                         f'<div class="l">Drinks / week<br>(lower is better)</div></div>', unsafe_allow_html=True)
             s3.markdown(f'<div class="scorecard"><div class="v">{activity:.0f}h</div>'
                         f'<div class="l">Activity / week<br>(more is better)</div></div>', unsafe_allow_html=True)
+            if img_prob is not None:
+                st.caption(f"🖼️ Ultrasound: {image_finding(img_prob)} — a radiologist should confirm.")
 
     with st.expander("Why did I get this result?"):
         if img_prob is not None:
@@ -267,6 +276,8 @@ if go:
             st.write(f"{looked}. The main things raising your risk are: **" + ", ".join(reasons) + "**.")
         else:
             st.write(f"{looked}. Nothing major is raising your risk right now — keep it up! 👍")
+        if img_prob is not None:
+            st.write(f"🖼️ **From the picture:** {image_finding(img_prob)}. A radiologist should confirm.")
         st.write("Eating healthier, moving more, and cutting back on alcohol can all help lower your risk.")
 
     st.caption("💙 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
