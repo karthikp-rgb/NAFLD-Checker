@@ -73,7 +73,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span></div>
+  <div class="badge"><span class="dot"></span> Two AI models, one result</div>
   <h1>Fatty Liver Risk Analyzer</h1>
   <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
@@ -213,15 +213,13 @@ if go:
 
     if img_prob is not None:
         prob = 0.6 * tab_prob + 0.4 * img_prob
-        parts = [("Health-details model", tab_prob, 60), ("Ultrasound image model", img_prob, 40)]
     else:
         prob = tab_prob
-        parts = [("Health-details model", tab_prob, 100)]
 
     if prob >= 0.6:
         c1, c2, cmain, word = "#fb7185", "#dc2626", "#fb7185", "High"
         title, msg = "🔴 Please see a doctor soon", \
-            "The combined result suggests a high chance of fatty liver. Please book a check-up and ask about a liver scan (ultrasound / FibroScan)."
+            "The result suggests a high chance of fatty liver. Please book a check-up and ask about a liver scan (ultrasound / FibroScan)."
     elif prob >= 0.3:
         c1, c2, cmain, word = "#fbbf24", "#f59e0b", "#fbbf24", "Moderate"
         title, msg = "🟠 Worth getting checked", \
@@ -252,21 +250,24 @@ if go:
             s3.markdown(f'<div class="scorecard"><div class="v">{activity:.0f}h</div>'
                         f'<div class="l">Activity / week<br>(more is better)</div></div>', unsafe_allow_html=True)
 
-    with st.expander("How was this worked out?"):
-        st.write("Your final risk combines the models:")
-        for name, p, w in parts:
-            st.write(f"- **{name}**: {p*100:.0f}%  (weight {w}%)")
-        drivers = []
-        if bmi >= 25: drivers.append(f"BMI {bmi:.0f}")
-        if diabetes == "Yes": drivers.append("diabetes")
-        if hypertension == "Yes": drivers.append("high blood pressure")
-        if alcohol >= 7: drivers.append("high alcohol")
-        if smoking == "Yes": drivers.append("smoking")
-        if activity < 2: drivers.append("low activity")
-        if genetic != "None": drivers.append("family history")
-        st.write("**Things adding to your risk:** " + (", ".join(drivers) if drivers else "none major"))
-        if model_bundle.get("synthetic"):
-            st.caption("Bundled model was trained on example data — replace model.pkl with your real trained model for final results.")
+    with st.expander("Why did I get this result?"):
+        if img_prob is not None:
+            looked = "We looked at your answers and your ultrasound picture"
+        else:
+            looked = "We analysed only your answers (no ultrasound was uploaded)"
+        reasons = []
+        if bmi >= 25: reasons.append("your weight (BMI)")
+        if diabetes == "Yes": reasons.append("diabetes")
+        if hypertension == "Yes": reasons.append("high blood pressure")
+        if alcohol >= 7: reasons.append("drinking alcohol")
+        if smoking == "Yes": reasons.append("smoking")
+        if activity < 2: reasons.append("not much exercise")
+        if genetic != "None": reasons.append("family history")
+        if reasons:
+            st.write(f"{looked}. The main things raising your risk are: **" + ", ".join(reasons) + "**.")
+        else:
+            st.write(f"{looked}. Nothing major is raising your risk right now — keep it up! 👍")
+        st.write("Eating healthier, moving more, and cutting back on alcohol can all help lower your risk.")
 
     st.caption("💙 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
 
