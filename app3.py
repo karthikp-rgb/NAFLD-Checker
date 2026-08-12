@@ -257,7 +257,7 @@ if go:
             s3.markdown(f'<div class="scorecard"><div class="v">{activity:.0f}h</div>'
                         f'<div class="l">Activity / week<br>(more is better)</div></div>', unsafe_allow_html=True)
             if img_prob is not None:
-                st.caption(f"🖼️ Ultrasound: {image_finding(img_prob)} — a radiologist should confirm.")
+                st.caption(f" Ultrasound: {image_finding(img_prob)} — a radiologist should confirm.")
 
     with st.expander("Why did I get this result?"):
         if img_prob is not None:
