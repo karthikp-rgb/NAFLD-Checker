@@ -277,7 +277,7 @@ if go:
         else:
             st.write(f"{looked}. Nothing major is raising your risk right now — keep it up! 👍")
         if img_prob is not None:
-            st.write(f"🖼️ **From the picture:** {image_finding(img_prob)}. A radiologist should confirm.")
+            st.write(f" **From the picture:** {image_finding(img_prob)}. A radiologist should confirm.")
         st.write("Eating healthier, moving more, and cutting back on alcohol can all help lower your risk.")
 
     st.caption("💙 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
