@@ -73,7 +73,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span> Two AI models, one result</div>
+  <div class="badge"><span class="dot"></span></div>
   <h1>Fatty Liver Risk Analyzer</h1>
   <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
