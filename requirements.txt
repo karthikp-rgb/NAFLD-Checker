@@ -4,8 +4,5 @@ pandas>=2.0
 numpy>=1.26
 joblib>=1.3
 pillow>=10.0
-# --- Optional: enable the ultrasound deep-learning CNN ---
-# After training ultrasound_cnn.pt, uncomment these two lines (heavier deploy).
-# The app works without them using built-in image analysis.
-# torch>=2.2
-# torchvision>=0.17
+torch>=2.2
+torchvision>=0.17
