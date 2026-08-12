@@ -78,7 +78,7 @@ st.markdown("""
   <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
     <span class="pill">Health details + optional ultrasound</span>
-    <span class="pill">Combined AI result</span>
+    <span class="pill">Free & private</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
