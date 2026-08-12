@@ -17,7 +17,7 @@ import joblib
 import streamlit as st
 from PIL import Image, ImageStat, ImageFilter
 
-st.set_page_config(page_title="Fatty Liver Risk Checker", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="Fatty Liver Risk Analyzer", page_icon="🩺", layout="wide")
 MODEL_PATH, CNN_PATH = "model.pkl", "ultrasound_cnn.pt"
 
 st.markdown("""
@@ -73,8 +73,8 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span> Two AI models, one result</div>
-  <h1>Fatty Liver Risk Checker</h1>
+  <div class="badge"><span class="dot"></span></div>
+  <h1>Fatty Liver Risk Analyzer</h1>
   <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
     <span class="pill">Health details + optional ultrasound</span>
