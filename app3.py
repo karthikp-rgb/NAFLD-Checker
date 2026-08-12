@@ -73,7 +73,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span> </div>
+  <div class="badge"><span class="dot"></span> Two AI models, one result</div>
   <h1>Fatty Liver Risk Checker</h1>
   <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
@@ -154,14 +154,27 @@ with st.container(border=True):
     age = a.number_input("Age", 1, 100, 40, help="Your age in years")
     gender = b.selectbox("Gender", ["Female", "Male", "Other / prefer not to say"], help="Used only to fine-tune the score")
     bmi = c.number_input("BMI", 10.0, 60.0, 25.0, 0.1, help="Body Mass Index — your weight for your height (an online tool can work it out)")
-    alcohol = a.number_input("Alcohol (drinks per week)", 0.0, 40.0, 3.0, 0.5, help="Roughly how many alcoholic drinks per week")
-    activity = b.number_input("Physical activity (hours per week)", 0.0, 30.0, 3.0, 0.5, help="Hours of exercise/activity per week")
-    genetic = c.selectbox("Family history of liver disease", ["None", "Some", "Strong"], help="Genetic / family risk")
-    smoking = a.selectbox("Do you smoke?", ["No", "Yes"])
-    diabetes = b.selectbox("Do you have diabetes?", ["No", "Yes"], help="Type-2 diabetes")
-    hypertension = c.selectbox("High blood pressure?", ["No", "Yes"], help="Hypertension")
-    lft = a.number_input("Liver function test score (optional)", 0.0, 150.0, 40.0, 1.0,
-                         help="A value from a liver blood test if you have one; leave as-is if you don't.")
+    activity = a.number_input("Physical activity (hours per week)", 0.0, 30.0, 3.0, 0.5, help="Hours of exercise/activity per week")
+    genetic = b.selectbox("Family history of liver disease", ["None", "Some", "Strong"], help="Genetic / family risk")
+    smoking = c.selectbox("Do you smoke?", ["No", "Yes"])
+    diabetes = a.selectbox("Do you have diabetes?", ["No", "Yes"], help="Type-2 diabetes")
+    hypertension = b.selectbox("High blood pressure?", ["No", "Yes"], help="Hypertension")
+
+    # Alcohol — ask first, then how many only if they say yes
+    d1, d2 = st.columns(2)
+    drank = d1.selectbox("Did you drink alcohol this week?", ["No", "Yes"])
+    alcohol = 0.0
+    if drank == "Yes":
+        alcohol = d2.number_input("How many drinks this week?", 0.0, 40.0, 3.0, 0.5,
+                                  help="Roughly how many alcoholic drinks this week")
+
+    # Liver function test — optional, only ask for the number if they have it
+    e1, e2 = st.columns(2)
+    has_lft = e1.selectbox("Do you have a liver function test score?", ["No", "Yes"],
+                           help="A number from a liver blood test — leave as 'No' if you don't have one")
+    lft = 40.0
+    if has_lft == "Yes":
+        lft = e2.number_input("Liver function test score", 0.0, 150.0, 40.0, 1.0)
 
     with st.expander("➕  Add a liver ultrasound image (optional — adds the image model)"):
         up = st.file_uploader("Upload a B-mode liver ultrasound (PNG/JPG)", type=["png", "jpg", "jpeg"])
@@ -194,13 +207,12 @@ if go:
     row = pd.DataFrame([[values.get(f, 0) for f in feats]], columns=feats)
     tab_prob = float(model_bundle["model"].predict_proba(row)[0, 1])
 
-    # image model (optional) -> blend
     img_prob = None
     if us_img is not None:
         img_prob = us_cnn_prob(us_img, cnn) if cnn else us_heuristic_prob(us_img)
 
     if img_prob is not None:
-        prob = 0.6 * tab_prob + 0.4 * img_prob          # late fusion of the two models
+        prob = 0.6 * tab_prob + 0.4 * img_prob
         parts = [("Health-details model", tab_prob, 60), ("Ultrasound image model", img_prob, 40)]
     else:
         prob = tab_prob
@@ -241,7 +253,7 @@ if go:
                         f'<div class="l">Activity / week<br>(more is better)</div></div>', unsafe_allow_html=True)
 
     with st.expander("How was this worked out?"):
-        st.write("Your final risk combines the models")
+        st.write("Your final risk combines the models:")
         for name, p, w in parts:
             st.write(f"- **{name}**: {p*100:.0f}%  (weight {w}%)")
         drivers = []
