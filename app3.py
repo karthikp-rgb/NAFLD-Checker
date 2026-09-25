@@ -85,9 +85,8 @@ st.markdown("""
 <div class="hero">
   <div class="badge"><span class="dot"></span> AI-based early screening</div>
   <h1>Fatty Liver Risk Checker</h1>
-  <p>A trained model reads your everyday health details and estimates your risk of fatty liver — early, simply, and in plain language.</p>
+  <p>A trained model reads your everyday health details and estimates your risk of fatty liver.</p>
   <div>
-    <span class="pill">🇮🇳 ~38% of Indian adults affected</span>
     <span class="pill">Everyday health details</span>
     <span class="pill">Instant risk estimate</span>
   </div>
@@ -230,6 +229,6 @@ if go:
             st.write("We looked at your answers. Nothing major is raising your risk right now — keep it up! 👍")
         st.write("Eating healthier, moving more, and cutting back on alcohol can all help lower your risk.")
 
-    st.caption("💙 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
+    st.caption("👀 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
 
-st.caption("MBA Dissertation 2026 · Karthik P · a health-data model (Random Forest)")
+st.caption("MBA Dissertation 2026 · Karthik P ·")
