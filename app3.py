@@ -83,7 +83,6 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span> AI-based early screening</div>
   <h1>Fatty Liver Risk Checker</h1>
   <p>A trained model reads your everyday health details and estimates your risk of fatty liver.</p>
   <div>
