@@ -17,7 +17,7 @@ import joblib
 import streamlit as st
 from PIL import Image, ImageStat, ImageFilter
 
-st.set_page_config(page_title="Fatty Liver Risk Analyzer", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="Fatty Liver Risk Checker", page_icon="🩺", layout="wide")
 MODEL_PATH, CNN_PATH = "model.pkl", "ultrasound_cnn.pt"
 
 st.markdown("""
@@ -31,6 +31,18 @@ st.markdown("""
   #0a0e1a;}
 .block-container {padding-top: 1.1rem; padding-bottom: 2rem; max-width: 1120px;}
 html, body, [class*="css"], .stMarkdown, p, label, div {font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
+/* --- Force one uniform colour scheme on every device / browser theme --- */
+.stApp, .stApp p, .stApp label, .stApp span, .stApp div,
+.stMarkdown, [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p,
+.stSelectbox label, .stNumberInput label, .stFileUploader label,
+.stExpander summary, .stExpander p {color:#e8ecf4 !important;}
+/* input & dropdown text and boxes stay dark with light text on all themes */
+.stNumberInput input, .stTextInput input,
+div[data-baseweb="select"] > div, div[data-baseweb="select"] * {color:#f1f5f9 !important;}
+.stNumberInput div[data-baseweb="input"], .stNumberInput input,
+div[data-baseweb="select"] > div {background:#0f1522 !important; border-color:rgba(255,255,255,.14) !important;}
+[data-baseweb="popover"], [role="listbox"], [role="option"] {background:#0f1522 !important; color:#f1f5f9 !important;}
+.stApp .sub {color:#94a3b8 !important;}
 @keyframes heroShift {0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}}
 @keyframes fadeUp {from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
 .hero {position:relative; overflow:hidden; border-radius:22px; padding:30px 34px; margin-bottom:18px;
@@ -73,12 +85,13 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover{transform:translateY(-2px)
 
 st.markdown("""
 <div class="hero">
-  <div class="badge"><span class="dot"></span></div>
-  <h1>Fatty Liver Risk Analyzer</h1>
+  <div class="badge"><span class="dot"></span> Two AI models, one result</div>
+  <h1>Fatty Liver Risk Checker</h1>
   <p>A trained model reads your health details, and — if you add a liver ultrasound — a second image model checks the scan. The two are combined into one risk estimate.</p>
   <div>
+    <span class="pill">🇮🇳 ~38% of Indian adults affected</span>
     <span class="pill">Health details + optional ultrasound</span>
-    <span class="pill">Free & private</span>
+    <span class="pill">Combined AI result</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -157,7 +170,7 @@ model_bundle, cnn = load_model(), load_cnn()
 
 with st.container(border=True):
     st.markdown('<p class="sec">Your details</p>'
-                '<p class="sub">Everyday health questions — no blood tests needed except the last one (optional).</p>',
+                '<p class="sub">Everyday health questions — no blood tests or scans needed. You can add test results at the end if you have them.</p>',
                 unsafe_allow_html=True)
     a, b, c = st.columns(3)
     age = a.number_input("Age", 1, 100, 40, help="Your age in years")
@@ -169,6 +182,7 @@ with st.container(border=True):
     diabetes = a.selectbox("Do you have diabetes?", ["No", "Yes"], help="Type-2 diabetes")
     hypertension = b.selectbox("High blood pressure?", ["No", "Yes"], help="Hypertension")
 
+    # Alcohol — ask first, then how many only if they say yes
     d1, d2 = st.columns(2)
     drank = d1.selectbox("Did you drink alcohol this week?", ["No", "Yes"])
     alcohol = 0.0
@@ -176,20 +190,27 @@ with st.container(border=True):
         alcohol = d2.number_input("How many drinks this week?", 0.0, 40.0, 3.0, 0.5,
                                   help="Roughly how many alcoholic drinks this week")
 
-    e1, e2 = st.columns(2)
-    has_lft = e1.selectbox("Do you have a liver function test score?", ["No", "Yes"],
-                           help="A number from a liver blood test — leave as 'No' if you don't have one")
+    # Optional test results — a liver blood test (ALT/SGPT) and/or an ultrasound, grouped together
     lft = 40.0
-    if has_lft == "Yes":
-        lft = e2.number_input("Liver function test score", 0.0, 150.0, 40.0, 1.0)
-
-    with st.expander("➕  Add a liver ultrasound image (optional — adds the image model)"):
+    us_img = None
+    with st.expander("➕  Add test results (optional) — a liver blood test and/or an ultrasound"):
+        st.caption("Both are optional. Add whichever you have — each one makes the estimate a little more accurate.")
+        f1, f2 = st.columns(2)
+        has_lft = f1.selectbox("Do you have a liver blood test (ALT / SGPT)?", ["No", "Yes"],
+                               help="ALT — also written SGPT — is the main liver enzyme measured in a routine "
+                                    "Liver Function Test (LFT). Leave as 'No' if you don't have it.")
+        if has_lft == "Yes":
+            lft = f2.number_input("ALT (SGPT) level in U/L", 0.0, 300.0, 40.0, 1.0,
+                                  help="Your ALT / SGPT value in U/L from a blood report "
+                                       "(a normal range is roughly 7–56 U/L; higher can suggest a strained liver).")
+        st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,.12);margin:10px 0'>",
+                    unsafe_allow_html=True)
         up = st.file_uploader("Upload a B-mode liver ultrasound (PNG/JPG)", type=["png", "jpg", "jpeg"])
         us_img = Image.open(up) if up else None
         if us_img:
             st.image(us_img, width=260)
         st.caption(("Deep-learning image model active." if cnn else "Built-in image analysis active.")
-                   + " When added, the image result is blended with your health-details result.")
+                   + " When a scan is added, the image result is blended with your health-details result.")
 
 go = st.button("🔍  Check my liver risk", use_container_width=True)
 
@@ -214,19 +235,22 @@ if go:
     row = pd.DataFrame([[values.get(f, 0) for f in feats]], columns=feats)
     tab_prob = float(model_bundle["model"].predict_proba(row)[0, 1])
 
+    # image model (optional) -> blend
     img_prob = None
     if us_img is not None:
         img_prob = us_cnn_prob(us_img, cnn) if cnn else us_heuristic_prob(us_img)
 
     if img_prob is not None:
-        prob = 0.6 * tab_prob + 0.4 * img_prob
+        prob = 0.6 * tab_prob + 0.4 * img_prob          # late fusion of the two models
+        parts = [("Health-details model", tab_prob, 60), ("Ultrasound image model", img_prob, 40)]
     else:
         prob = tab_prob
+        parts = [("Health-details model", tab_prob, 100)]
 
     if prob >= 0.6:
         c1, c2, cmain, word = "#fb7185", "#dc2626", "#fb7185", "High"
         title, msg = "🔴 Please see a doctor soon", \
-            "The result suggests a high chance of fatty liver. Please book a check-up and ask about a liver scan (ultrasound / FibroScan)."
+            "The combined result suggests a high chance of fatty liver. Please book a check-up and ask about a liver scan (ultrasound / FibroScan)."
     elif prob >= 0.3:
         c1, c2, cmain, word = "#fbbf24", "#f59e0b", "#fbbf24", "Moderate"
         title, msg = "🟠 Worth getting checked", \
@@ -257,7 +281,7 @@ if go:
             s3.markdown(f'<div class="scorecard"><div class="v">{activity:.0f}h</div>'
                         f'<div class="l">Activity / week<br>(more is better)</div></div>', unsafe_allow_html=True)
             if img_prob is not None:
-                st.caption(f" Ultrasound: {image_finding(img_prob)} — a radiologist should confirm.")
+                st.caption(f"🖼️ Ultrasound: {image_finding(img_prob)} — a radiologist should confirm.")
 
     with st.expander("Why did I get this result?"):
         if img_prob is not None:
@@ -277,9 +301,9 @@ if go:
         else:
             st.write(f"{looked}. Nothing major is raising your risk right now — keep it up! 👍")
         if img_prob is not None:
-            st.write(f" **From the picture:** {image_finding(img_prob)}. A radiologist should confirm.")
+            st.write(f"🖼️ **From the picture:** {image_finding(img_prob)}. A radiologist should confirm.")
         st.write("Eating healthier, moving more, and cutting back on alcohol can all help lower your risk.")
 
     st.caption("💙 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
 
-st.caption("MBA Dissertation 2026 · Karthik P")
+st.caption("MBA Dissertation 2026 · Karthik P · a tabular model + an image model, combined")
