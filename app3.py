@@ -229,6 +229,6 @@ if go:
             st.write("We looked at your answers. Nothing major is raising your risk right now — keep it up! 👍")
         st.write("Eating healthier, moving more, and cutting back on alcohol can all help lower your risk.")
 
-    st.caption("👀 This is a helper for you and your doctor — not a medical diagnosis. If you're worried, please see a doctor.")
+    st.caption("🎤 This is a helper for you and your doctor, not a medical diagnosis. If you're worried, please see a doctor.")
 
 st.caption("MBA Dissertation 2026 · Karthik P ·")
