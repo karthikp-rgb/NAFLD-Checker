@@ -1,0 +1,57 @@
+name: Keep Streamlit app awake
+
+# Visits the app every 6 hours (the free tier sleeps after 12 hours of no traffic)
+# and clicks the "wake up" button if it is asleep.
+on:
+  schedule:
+    - cron: "0 */6 * * *"     # 00:00, 06:00, 12:00, 18:00 UTC
+  workflow_dispatch:          # lets you run it manually from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: browser-actions/setup-chrome@v1
+
+      - name: Install Selenium
+        run: pip install selenium
+
+      - name: Visit the app and wake it if it is sleeping
+        env:
+          APP_URL: "https://nafld-checker-kmpajvvumfweh9uqodewbh.streamlit.app"   # <-- REPLACE with your real app URL
+        run: |
+          python - <<'PY'
+          import os, time
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+          from selenium.webdriver.common.by import By
+
+          url = os.environ["APP_URL"]
+          opts = Options()
+          opts.add_argument("--headless=new")
+          opts.add_argument("--no-sandbox")
+          opts.add_argument("--disable-dev-shm-usage")
+          opts.add_argument("--window-size=1280,900")
+
+          driver = webdriver.Chrome(options=opts)
+          try:
+              driver.get(url)
+              time.sleep(8)
+              clicked = False
+              for b in driver.find_elements(By.TAG_NAME, "button"):
+                  if "get this app back up" in (b.text or "").lower():
+                      b.click()
+                      clicked = True
+                      print("App was asleep -> clicked the wake-up button.")
+                      time.sleep(40)   # give it time to boot
+                      break
+              if not clicked:
+                  print("App was already awake.")
+              print("Page title:", driver.title)
+          finally:
+              driver.quit()
+          PY
